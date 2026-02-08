@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import AuthContext from './store/auth-context';
+import AuthContext from '../store/auth-context';
 import './Signup.css';
 
 function Signup() {
