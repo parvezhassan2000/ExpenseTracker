@@ -87,6 +87,65 @@ function AuthProvider({ children }) {
         }
     }
 
+     // NEW: Update User Profile Handler using Firebase REST API
+     async function updateUserProfile(userData) {
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const url = `https://identitytoolkit.googleapis.com/v1/accounts :update?key=AIzaSyASUQKY0hpH3Tp-GMyT3Ud-IKMoVZDG3G0`;
+
+        try {
+            const requestBody = {
+                idToken: token,
+                displayName: userData.fullName,
+                photoUrl: userData.profilePhotoUrl,
+                returnSecureToken: true
+            };
+  // Remove undefined values
+            Object.keys(requestBody).forEach(key => {
+                if (requestBody[key] === undefined || requestBody[key] === null) {
+                    delete requestBody[key];
+                }
+            });
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const responseData = await response.json();
+  if (!response.ok) {
+                throw new Error(responseData.error?.message || 'Failed to update profile');
+            }
+
+            // Update local state if needed
+            if (responseData.displayName) {
+                setEmail(responseData.email || email); // Update email if changed
+            }
+
+            return {
+                success: true,
+                message: 'Profile updated successfully!',
+                data: responseData
+            };
+
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            return {
+                success: false,
+                message: error.message
+            };
+        }
+    }
+
+
+
+
+
     // Logout Handler
     function logoutHandler() {
         setToken(null);
@@ -101,7 +160,8 @@ function AuthProvider({ children }) {
         isLoggedIn: isLoggedIn,
         signup: signupHandler,
         login: loginHandler,
-        logout: logoutHandler
+        logout: logoutHandler,
+        updateUserProfile: updateUserProfile
     };
 
     return (

@@ -1,6 +1,8 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuthContext from '../store/auth-context';
 import './Login.css';
+import IncompleteProfile from './profile/IncompleteProfile';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -10,7 +12,7 @@ function Login() {
     const [loading, setLoading] = useState(false);
 
     const authCtx = useContext(AuthContext);
-
+    const navigate=useNavigate();
     async function handleSubmit(e) {
         e.preventDefault();
         setError('');
@@ -21,7 +23,7 @@ function Login() {
             
             if (result.success) {
                 // Redirect to dashboard or home
-                // navigate('/dashboard');
+                navigate('/profile/incompleteProfile');
                 console.log('Login successful!');
             } else {
                 setError(result.message);
