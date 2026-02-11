@@ -48,6 +48,8 @@ function Login() {
                     <div className="form-group">
                         <input
                             type="email"
+                            autoComplete="username" // 👈 ADD THIS
+
                             placeholder="Email"
                             className="login-input"
                             value={email}
@@ -60,6 +62,8 @@ function Login() {
                     <div className="form-group password-group">
                         <input
                             type={showPassword ? "text" : "password"}
+                            autoComplete="current-password" // 👈 ADD THIS
+
                             placeholder="password"
                             className="login-input"
                             value={password}

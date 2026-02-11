@@ -78,6 +78,9 @@ function Signup() {
                         <input
                             type="password"
                             id="password"
+                            autoComplete="new-password" // 👈 ADD THIS
+
+                            
                             placeholder="Enter your password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -90,6 +93,7 @@ function Signup() {
                         <label htmlFor="confirmPassword">Confirm Password</label>
                         <input
                             type="password"
+                            autoComplete="new-password" // 👈 ADD THIS (same as password field)
                             id="confirmPassword"
                             placeholder="Confirm your password"
                             value={confirmPassword}

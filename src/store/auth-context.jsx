@@ -7,7 +7,9 @@ const AuthContext = createContext({
     signup: (() => {}),
     login: (() => {}),
     logout: (() => {}),
-    updateUserProfile: (() => {})
+    updateUserProfile: (() => {}),
+    getCurrentProfileData: (() => {})
+
 });
 
 export default AuthContext;

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../store/auth-context';
 import './profile.css';
@@ -15,6 +15,23 @@ function CompleteProfile() {
     const authCtx = useContext(AuthContext);
     const navigate = useNavigate();
 
+    // ✅ Load existing profile data on component mount
+    useEffect(() => {
+        const loadProfileData = async () => {
+            try {
+                const result = await authCtx.getCurrentProfileData();
+                if (result.success) {
+                    setFormData(result.profileData);
+                    console.log('Your Profile Data:', result.profileData);
+
+                }
+            } catch (err) {
+                console.error('Error loading profile:', err);
+            }
+        };
+        loadProfileData();
+    }, []);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -27,15 +44,12 @@ function CompleteProfile() {
         setLoading(true);
 
         try {
-            // Call the new updateUserProfile function
             const result = await authCtx.updateUserProfile(formData);
             
             if (result.success) {
                 setSuccess('Profile updated successfully!');
-                
-                // Navigate back after success
                 setTimeout(() => {
-                    navigate('/'); // Redirect to home
+                    navigate('/');
                 }, 1500);
             } else {
                 setError(result.message || 'Failed to update profile');
@@ -48,7 +62,7 @@ function CompleteProfile() {
     };
 
     const handleCancel = () => {
-        navigate(-1); // Go back to previous page
+        navigate(-1);
     };
 
     return (
@@ -64,6 +78,7 @@ function CompleteProfile() {
                 {error && <div className="alert alert-error">{error}</div>}
                 {success && <div className="alert alert-success">{success}</div>}
 
+                {/* ✅ Single form for profile completion */}
                 <form onSubmit={handleSubmit}>
                     <div className="form-row">
                         <div className="form-field">
@@ -82,6 +97,7 @@ function CompleteProfile() {
                                 onChange={handleChange}
                                 required
                                 disabled={loading}
+                                autoComplete="name" // ✅ Added per guidelines
                             />
                         </div>
 
@@ -101,6 +117,7 @@ function CompleteProfile() {
                                 value={formData.profilePhotoUrl}
                                 onChange={handleChange}
                                 disabled={loading}
+                                autoComplete="photo" // ✅ Added per guidelines
                             />
                         </div>
                     </div>
