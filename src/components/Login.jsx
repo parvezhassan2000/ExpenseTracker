@@ -17,21 +17,26 @@ function Login() {
         e.preventDefault();
         setError('');
         setLoading(true);
-
+    
         try {
             const result = await authCtx.login(email, password);
             
             if (result.success) {
-                // Redirect to dashboard or home
-                navigate('/profile/incompleteProfile');
-                console.log('Login successful!');
+                if (!result.profileComplete) {
+                    navigate('/profile/incompleteProfile');
+                } else {
+                    navigate('/dashboard');
+                }
+            } else if (result.requiresVerification) {
+                // ✅ Show verification required message
+                setError('Please verify your email address before logging in. Check your inbox for the verification link.');
             } else {
                 setError(result.message);
             }
         } catch (err) {
             setError('An unexpected error occurred');
         }
-
+    
         setLoading(false);
     }
 

@@ -45,9 +45,48 @@ function AuthProvider({ children }) {
             setEmail(data.email);
             localStorage.setItem('token', data.idToken);
             localStorage.setItem('email', data.email);
+            await sendEmailVerification(data.idToken);
 
             return { success: true, message: 'Signup successful!' };
         } catch (error) {
+            return { success: false, message: error.message };
+        }
+    }
+    async function sendEmailVerification(idToken) {
+        // ✅ FIXED URL - no spaces
+        const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyASUQKY0hpH3Tp-GMyT3Ud-IKMoVZDG3G0`;
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requestType: "VERIFY_EMAIL",
+                    idToken: idToken
+                })
+            });
+    
+            // ✅ CHECK RESPONSE STATUS (required by Firebase docs)
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // Handle specific error codes from Firebase documentation
+                const errorMessage = data.error?.message || 'Failed to send verification email';
+                
+                switch (errorMessage) {
+                    case 'INVALID_ID_TOKEN':
+                        throw new Error('Your session has expired. Please log in again.');
+                    case 'USER_NOT_FOUND':
+                        throw new Error('User account not found.');
+                    default:
+                        throw new Error(errorMessage);
+                }
+            }
+    
+            return { success: true, message: 'Verification email sent!' };
+            
+        } catch (error) {
+            console.error('Failed to send verification email:', error);
             return { success: false, message: error.message };
         }
     }
@@ -74,6 +113,8 @@ function AuthProvider({ children }) {
             return {
                 success: true,
                 profileComplete: !!profileComplete,
+                userData: user, // ✅ Include full user data including emailVerified
+
                 profileData: {
                     fullName: user.displayName || '',
                     profilePhotoUrl: user.photoUrl || ''
@@ -83,38 +124,65 @@ function AuthProvider({ children }) {
             return { success: false, message: error.message };
         }
     }
-
-    // Login Handler
-    async function loginHandler(email, password) {
-        // ✅ FIXED URL (no spaces!)
-        const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyASUQKY0hpH3Tp-GMyT3Ud-IKMoVZDG3G0`;
-        
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, returnSecureToken: true })
-            });
-    
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error.message || 'Login failed');
-    
-            setToken(data.idToken);
-            setEmail(data.email);
-            localStorage.setItem('token', data.idToken);
-            localStorage.setItem('email', data.email);
-    
-            // ✅ Use single function for profile check
-            const profileResult = await getCurrentProfileData();
-            
-            return { 
-                success: true,
-                profileComplete: profileResult.profileComplete
-            };
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
+    // Add this function for resending verification emails
+async function resendVerificationEmail() {
+    if (!token) {
+        return { success: false, message: 'Not logged in' };
     }
+    
+    try {
+        await sendEmailVerification(token);
+        return { success: true, message: 'Verification email sent!' };
+    } catch (error) {
+        return { success: false, message: 'Failed to send verification email' };
+    }
+}
+
+
+
+
+ // Replace your existing loginHandler with this:
+async function loginHandler(email, password) {
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyASUQKY0hpH3Tp-GMyT3Ud-IKMoVZDG3G0`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, returnSecureToken: true })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error.message || 'Login failed');
+
+        setToken(data.idToken);
+        setEmail(data.email);
+        localStorage.setItem('token', data.idToken);
+        localStorage.setItem('email', data.email);
+
+        // ✅ CHECK IF EMAIL IS VERIFIED
+        const profileResult = await getCurrentProfileData();
+        
+        // Get email verification status from the lookup API
+        const user = profileResult.userData; // We'll modify getCurrentProfileData to return this
+        
+        if (user && !user.emailVerified) {
+            // Email not verified - require verification first
+            return { 
+                success: false, 
+                requiresVerification: true,
+                message: 'Please verify your email address before logging in.'
+            };
+        }
+
+        return { 
+            success: true,
+            profileComplete: profileResult.profileComplete
+        };
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+}
     
      // NEW: Update User Profile Handler using Firebase REST API
      async function updateUserProfile(userData) {
@@ -193,7 +261,9 @@ function AuthProvider({ children }) {
         login: loginHandler,
         logout: logoutHandler,
         updateUserProfile: updateUserProfile,
-        getCurrentProfileData: getCurrentProfileData
+        getCurrentProfileData: getCurrentProfileData,
+        resendVerificationEmail: resendVerificationEmail
+
 
     };
 

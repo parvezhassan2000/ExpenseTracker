@@ -34,7 +34,7 @@ function Signup() {
             const result = await authCtx.signup(email, password);
             
             if (result.success) {
-                setSuccess('Account created successfully!');
+                setSuccess(result.message);
                 setEmail('');
                 setPassword('');
                 setConfirmPassword('');
@@ -65,6 +65,8 @@ function Signup() {
                         <input
                             type="email"
                             id="email"
+                            autoComplete="username" // 👈 ADD THIS
+
                             placeholder="Enter your email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
