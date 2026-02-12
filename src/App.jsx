@@ -7,6 +7,7 @@ import IncompleteProfile from "./components/profile/IncompleteProfile";
 import CompleteProfile from "./components/profile/CompleteProfile";
 import Navigation from "./components/Navigation";
 import Dashboard from "./components/Dashboard";
+import ForgotPassword from "./components/ForgotPassword";
 function App() {
   return (
     <Router>
@@ -16,6 +17,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} /> {/* 👈 ADD DASHBOARD ROUTE */}
+          <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Add this route */}
 
           <Route path="/profile/incompleteProfile" element={<IncompleteProfile />} />
           <Route path="/profile/complete" element={<CompleteProfile />} />

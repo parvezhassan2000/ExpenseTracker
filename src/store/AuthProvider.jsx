@@ -52,6 +52,51 @@ function AuthProvider({ children }) {
             return { success: false, message: error.message };
         }
     }
+    // Add this function to your AuthProvider.jsx
+async function sendPasswordResetEmail(email) {
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyASUQKY0hpH3Tp-GMyT3Ud-IKMoVZDG3G0`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                requestType: "PASSWORD_RESET",
+                email: email
+            })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            // Handle specific Firebase error codes
+            const errorMessage = data.error?.message || 'Failed to send password reset email';
+            
+            switch (errorMessage) {
+                case 'EMAIL_NOT_FOUND':
+                    throw new Error('No account found with this email address.');
+                case 'INVALID_EMAIL':
+                    throw new Error('Please enter a valid email address.');
+                default:
+                    throw new Error(errorMessage);
+            }
+        }
+
+        return { 
+            success: true, 
+            message: 'Password reset link sent successfully!' 
+        };
+
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        return { 
+            success: false, 
+            message: error.message || 'Failed to send password reset email. Please try again.'
+        };
+    }
+}
+
+
     async function sendEmailVerification(idToken) {
         // ✅ FIXED URL - no spaces
         const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyASUQKY0hpH3Tp-GMyT3Ud-IKMoVZDG3G0`;
@@ -262,7 +307,8 @@ async function loginHandler(email, password) {
         logout: logoutHandler,
         updateUserProfile: updateUserProfile,
         getCurrentProfileData: getCurrentProfileData,
-        resendVerificationEmail: resendVerificationEmail
+        resendVerificationEmail: resendVerificationEmail,
+        sendPasswordResetEmail:sendPasswordResetEmail
 
 
     };
